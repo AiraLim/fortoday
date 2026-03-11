@@ -1,302 +1,532 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>오늘도 화이팅! 🎉</title>
-  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Pen+Script&family=Do+Hyeon&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>두더지 화이팅! 🐾</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Do+Hyeon&family=Nanum+Pen+Script&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --c1: #FF6B6B;
-      --c2: #FFD93D;
-      --c3: #6BCB77;
-      --c4: #4D96FF;
-      --c5: #FF9FF3;
-      --c6: #FFA552;
+      --grass: #5DBB63; --dirt: #A0714F; --dirt-dark: #7a5038;
+      --c1:#FF6B6B; --c2:#FFD93D; --c3:#6BCB77; --c4:#4D96FF; --c5:#FF9FF3; --c6:#FFA552;
     }
-
-    html, body {
-      width: 100%; height: 100%;
-      overflow: hidden;
-    }
-
     body {
       font-family: 'Jua', sans-serif;
-      background: #FFF8F0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #a8e4f7 0%, #d0f0ff 50%, #c8f0a0 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      overflow: hidden; position: relative;
+      user-select: none;
     }
 
-    /* Animated background blobs */
-    .blob-wrap {
-      position: fixed;
-      inset: 0;
-      overflow: hidden;
-      z-index: 0;
+    /* Clouds */
+    .cloud {
+      position: fixed; border-radius: 50px;
+      background: rgba(255,255,255,0.85);
+      animation: cloudDrift linear infinite;
+      pointer-events: none; z-index: 0;
+    }
+    .cloud::before, .cloud::after {
+      content:''; position:absolute;
+      background:rgba(255,255,255,0.85); border-radius:50%;
+    }
+    .cloud:nth-child(1){width:120px;height:36px;top:8%;left:-140px;animation-duration:22s;}
+    .cloud:nth-child(1)::before{width:60px;height:50px;top:-22px;left:16px;}
+    .cloud:nth-child(1)::after{width:44px;height:38px;top:-14px;left:54px;}
+    .cloud:nth-child(2){width:90px;height:28px;top:18%;left:-110px;animation-duration:28s;animation-delay:-10s;}
+    .cloud:nth-child(2)::before{width:44px;height:38px;top:-18px;left:10px;}
+    .cloud:nth-child(2)::after{width:36px;height:30px;top:-10px;left:40px;}
+    .cloud:nth-child(3){width:100px;height:30px;top:5%;left:-120px;animation-duration:34s;animation-delay:-20s;}
+    .cloud:nth-child(3)::before{width:50px;height:44px;top:-20px;left:14px;}
+    .cloud:nth-child(3)::after{width:38px;height:32px;top:-12px;left:46px;}
+    @keyframes cloudDrift {
+      from { transform:translateX(0); }
+      to   { transform:translateX(calc(100vw + 160px)); }
+    }
+    .sun-el {
+      position:fixed; top:24px; right:36px; font-size:3rem;
+      animation:sunWobble 4s ease-in-out infinite;
+      pointer-events:none; z-index:1;
+    }
+    @keyframes sunWobble {
+      0%,100%{ transform:rotate(-10deg) scale(1); }
+      50%    { transform:rotate(10deg) scale(1.1); }
+    }
+
+    /* Game wrap */
+    .game-wrap {
+      position:relative; z-index:10;
+      display:flex; flex-direction:column; align-items:center; gap:16px;
+    }
+
+    /* Header */
+    .header {
+      display:flex; align-items:center; gap:28px;
+      background:rgba(255,255,255,0.6);
+      backdrop-filter:blur(10px);
+      border-radius:99px; padding:10px 28px;
+      border:2px solid rgba(255,255,255,0.75);
+      box-shadow:0 4px 20px rgba(0,0,0,0.08);
+    }
+    .stat { display:flex; flex-direction:column; align-items:center; }
+    .stat-label { font-size:0.7rem; color:#888; letter-spacing:1px; }
+    .stat-value { font-family:'Do Hyeon',sans-serif; font-size:1.5rem; color:#333; line-height:1; }
+    .stat-value.score { color:var(--c1); }
+    .stat-value.timer { color:var(--c4); }
+    .divider { width:1px; height:36px; background:rgba(0,0,0,0.12); }
+
+    /* Timer bar */
+    .timer-bar-wrap {
+      width:min(360px,88vw); height:10px;
+      background:rgba(255,255,255,0.5); border-radius:99px; overflow:hidden;
+      border:1px solid rgba(255,255,255,0.7);
+    }
+    .timer-bar {
+      height:100%;
+      background:linear-gradient(90deg,var(--c3),var(--c4));
+      border-radius:99px; transition:width 0.1s linear, background 0.5s;
+      width:100%;
+    }
+    .timer-bar.urgent { background:linear-gradient(90deg,var(--c6),var(--c1)); }
+
+    /* Grid */
+    .grid {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:16px;
+      padding:22px;
+      background:rgba(255,255,255,0.3);
+      backdrop-filter:blur(8px);
+      border-radius:28px;
+      border:2px solid rgba(255,255,255,0.6);
+      box-shadow:0 8px 40px rgba(0,0,0,0.1);
+    }
+
+    /*
+      HOLE STRUCTURE:
+      .hole  (outer, sets visual size, no overflow clip)
+        └ .hole-container  (clips the mole, overflow:hidden)
+              └ .hole-bg   (the dirt ellipse background)
+              └ .mole      (the character, slides up/down inside)
+        └ .hole-grass  (green cap, sits ON TOP at z-index above mole)
+    */
+
+    .hole {
+      position: relative;
+      width: 100px; height: 100px;
+    }
+    @media(max-width:400px){
+      .hole { width:82px; height:82px; }
+      .grid { gap:10px; padding:14px; }
+    }
+
+    /* This div clips the mole so it's invisible underground */
+    .hole-container {
+      position: absolute;
+      /* occupies the lower 60% of the hole — the "underground" area */
+      bottom: 0; left: 0; right: 0;
+      height: 65%;
+      overflow: hidden;  /* ← KEY: mole hidden below this */
+      border-radius: 0 0 50% 50%;
+    }
+
+    /* Dirt oval */
+    .hole-bg {
+      position: absolute;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; height: 100%;
+      background: radial-gradient(ellipse at 50% 40%, var(--dirt) 40%, var(--dirt-dark) 100%);
+      border-radius: 50%;
+      box-shadow: inset 0 6px 18px rgba(0,0,0,0.35);
+    }
+
+    /* Mole lives inside .hole-container, starts fully below bottom edge */
+    .mole {
+      position: absolute;
+      bottom: -100%;   /* hidden underground */
+      left: 50%; transform: translateX(-50%);
+      width: 58px; height: 66px;
+      transition: bottom 0.18s cubic-bezier(0.34,1.45,0.64,1);
+      cursor: pointer;
+      pointer-events: none;
+      z-index: 2;
+    }
+    /* up: slides into view */
+    .mole.up {
+      bottom: -4px;
+      pointer-events: all;
+    }
+    /* bonked: slams back down */
+    .mole.bonked {
+      bottom: -100%;
+      transition: bottom 0.12s ease-in;
       pointer-events: none;
     }
-    .blob {
+
+    /* Wiggle on pop up */
+    .mole.up .mole-svg { animation: moleWiggle 0.5s ease-in-out; }
+    @keyframes moleWiggle {
+      0%,100%{ transform:rotate(0deg); }
+      30%    { transform:rotate(-7deg); }
+      70%    { transform:rotate(7deg); }
+    }
+
+    .mole-svg {
+      width:58px; height:66px;
+      filter:drop-shadow(0 4px 8px rgba(0,0,0,0.25));
+    }
+
+    /* Green grass cap — floats above the hole-container so mole is clipped beneath it */
+    .hole-grass {
       position: absolute;
+      bottom: 60%;   /* sits right on top of the container boundary */
+      left: 50%; transform: translateX(-50%);
+      width: 108%; height: 22px;
+      background: var(--grass);
       border-radius: 50%;
-      filter: blur(70px);
-      opacity: 0.45;
-      animation: blobMove 8s ease-in-out infinite alternate;
-    }
-    .blob:nth-child(1) { width: 420px; height: 420px; background: var(--c1); top: -80px; left: -80px; animation-delay: 0s; }
-    .blob:nth-child(2) { width: 360px; height: 360px; background: var(--c2); top: -60px; right: -60px; animation-delay: 1.5s; }
-    .blob:nth-child(3) { width: 300px; height: 300px; background: var(--c3); bottom: -60px; left: 10%; animation-delay: 3s; }
-    .blob:nth-child(4) { width: 380px; height: 380px; background: var(--c4); bottom: -80px; right: -60px; animation-delay: 2s; }
-    .blob:nth-child(5) { width: 260px; height: 260px; background: var(--c5); top: 40%; left: 40%; animation-delay: 1s; }
-
-    @keyframes blobMove {
-      0%   { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(30px, 20px) scale(1.08); }
+      box-shadow: 0 3px 0 #3d9940;
+      z-index: 4;   /* above mole */
+      pointer-events: none;
     }
 
-    /* Main card */
-    .card {
-      position: relative;
+    /* Hit star */
+    .hit-star {
+      position: absolute; bottom: 68%; left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.6rem;
+      pointer-events: none;
+      animation: starPop 0.6s ease forwards;
       z-index: 10;
-      background: rgba(255,255,255,0.72);
-      backdrop-filter: blur(24px);
-      border-radius: 36px;
-      padding: 52px 60px 44px;
-      text-align: center;
-      box-shadow:
-        0 8px 40px rgba(0,0,0,0.10),
-        0 0 0 3px rgba(255,255,255,0.6) inset;
-      max-width: 560px;
-      width: 90vw;
-      animation: cardPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    @keyframes starPop {
+      0%  { opacity:1; transform:translateX(-50%) scale(0.5) translateY(0); }
+      60% { opacity:1; transform:translateX(-50%) scale(1.4) translateY(-18px); }
+      100%{ opacity:0; transform:translateX(-50%) scale(1) translateY(-34px); }
+    }
+
+    /* Score popup */
+    .score-pop {
+      position:fixed;
+      font-family:'Do Hyeon',sans-serif; font-size:1.8rem;
+      color:var(--c1); text-shadow:0 2px 8px rgba(0,0,0,0.2);
+      pointer-events:none; z-index:200;
+      animation:scoreFly 0.8s ease forwards;
+    }
+    @keyframes scoreFly {
+      0%  { opacity:1; transform:translateY(0) scale(1); }
+      100%{ opacity:0; transform:translateY(-60px) scale(1.3); }
+    }
+
+    /* Overlay */
+    .overlay {
+      position:fixed; inset:0; z-index:100;
+      background:rgba(20,60,20,0.6);
+      backdrop-filter:blur(6px);
+      display:flex; align-items:center; justify-content:center;
+      transition:opacity 0.4s;
+    }
+    .overlay.hidden { opacity:0; pointer-events:none; }
+    .overlay-card {
+      background:rgba(255,255,255,0.94);
+      border-radius:32px; padding:44px 48px 36px;
+      text-align:center; max-width:400px; width:90vw;
+      box-shadow:0 20px 60px rgba(0,0,0,0.2);
+      animation:cardPop 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
     }
     @keyframes cardPop {
-      from { opacity: 0; transform: scale(0.7) translateY(40px); }
-      to   { opacity: 1; transform: scale(1) translateY(0); }
+      from{ opacity:0; transform:scale(0.6) translateY(40px); }
+      to  { opacity:1; transform:scale(1) translateY(0); }
     }
-
-    /* Sun emoji top */
-    .sun {
-      font-size: 3.6rem;
-      display: block;
-      margin-bottom: 12px;
-      animation: sunSpin 6s linear infinite;
-      transform-origin: center;
+    .overlay-emoji { font-size:3.6rem; display:block; margin-bottom:10px; }
+    .overlay-title {
+      font-family:'Do Hyeon',sans-serif;
+      font-size:clamp(2.2rem,8vw,3.8rem);
+      background:linear-gradient(135deg,var(--c1),var(--c6),var(--c2),var(--c3),var(--c4));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+      background-size:200%; animation:shimmer 3s ease infinite alternate;
+      line-height:1.1;
     }
-    @keyframes sunSpin {
-      0%   { transform: rotate(0deg) scale(1); }
-      50%  { transform: rotate(180deg) scale(1.15); }
-      100% { transform: rotate(360deg) scale(1); }
+    @keyframes shimmer{ 0%{background-position:0%;} 100%{background-position:100%;} }
+    .overlay-sub {
+      font-family:'Nanum Pen Script',cursive;
+      font-size:1.4rem; color:#666; margin:10px 0 20px;
     }
-
-    /* Main headline */
-    .headline {
-      font-family: 'Do Hyeon', sans-serif;
-      font-size: clamp(3rem, 10vw, 5.2rem);
-      line-height: 1.1;
-      letter-spacing: -1px;
-      background: linear-gradient(135deg, var(--c1) 0%, var(--c6) 30%, var(--c2) 55%, var(--c3) 75%, var(--c4) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: textShimmer 4s ease-in-out infinite alternate;
-      background-size: 200%;
+    .overlay-score-wrap {
+      background:#FFF8F0; border-radius:16px; padding:14px 20px;
+      margin-bottom:20px; display:none;
     }
-    @keyframes textShimmer {
-      0%   { background-position: 0% 50%; }
-      100% { background-position: 100% 50%; }
-    }
-
-    .sub {
-      font-family: 'Nanum Pen Script', cursive;
-      font-size: clamp(1.3rem, 4vw, 1.9rem);
-      color: #555;
-      margin-top: 14px;
-      animation: fadeSlide 1s 0.5s ease both;
-    }
-    @keyframes fadeSlide {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Color bar */
+    .overlay-score-wrap.show { display:block; }
+    .overlay-score-label { font-size:0.85rem; color:#aaa; }
+    .overlay-score-num { font-family:'Do Hyeon',sans-serif; font-size:2.8rem; color:var(--c1); }
     .rainbow-bar {
-      height: 6px;
-      border-radius: 99px;
-      background: linear-gradient(90deg, var(--c1), var(--c6), var(--c2), var(--c3), var(--c4), var(--c5));
-      background-size: 300%;
-      margin: 24px auto 20px;
-      width: 70%;
-      animation: barSlide 3s linear infinite;
+      height:5px; border-radius:99px; width:60%; margin:0 auto 20px;
+      background:linear-gradient(90deg,var(--c1),var(--c6),var(--c2),var(--c3),var(--c4),var(--c5));
+      background-size:300%; animation:barSlide 2s linear infinite;
     }
-    @keyframes barSlide {
-      0%   { background-position: 0% 50%; }
-      100% { background-position: 100% 50%; }
+    @keyframes barSlide{ 0%{background-position:0%;} 100%{background-position:100%;} }
+    .play-btn {
+      background:linear-gradient(135deg,var(--c3),var(--c4));
+      color:#fff; border:none; border-radius:50px;
+      padding:13px 40px;
+      font-family:'Jua',sans-serif; font-size:1.2rem;
+      cursor:pointer; letter-spacing:2px;
+      box-shadow:0 6px 20px rgba(77,150,255,0.4);
+      transition:transform 0.1s, box-shadow 0.1s;
     }
-
-    /* Message pills */
-    .pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 4px;
-      animation: fadeSlide 1s 0.9s ease both;
-      opacity: 0;
-      animation-fill-mode: both;
-    }
-    .pill {
-      padding: 7px 18px;
-      border-radius: 99px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 0.5px;
-      animation: pillBounce 2.5s ease-in-out infinite;
-    }
-    .pill:nth-child(1) { background: var(--c1); animation-delay: 0s; }
-    .pill:nth-child(2) { background: var(--c6); animation-delay: 0.3s; }
-    .pill:nth-child(3) { background: var(--c2); color: #555; animation-delay: 0.6s; }
-    .pill:nth-child(4) { background: var(--c3); animation-delay: 0.9s; }
-    .pill:nth-child(5) { background: var(--c4); animation-delay: 1.2s; }
-    .pill:nth-child(6) { background: var(--c5); color: #555; animation-delay: 1.5s; }
-
-    @keyframes pillBounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-    }
+    .play-btn:hover{ transform:translateY(-2px); box-shadow:0 10px 28px rgba(77,150,255,0.5); }
+    .play-btn:active{ transform:translateY(1px); }
 
     /* Confetti */
-    .confetti-wrap {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 20;
-      overflow: hidden;
+    .confetti-wrap{ position:fixed; inset:0; pointer-events:none; z-index:110; }
+    .confetti-piece{
+      position:absolute; top:-20px; border-radius:2px;
+      animation:confettiFall linear forwards;
     }
-    .confetti-piece {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      top: -20px;
-      border-radius: 2px;
-      animation: confettiFall linear infinite;
-      opacity: 0.85;
-    }
-
-    @keyframes confettiFall {
-      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-    }
-
-    /* Stars floating */
-    .stars-wrap {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 5;
-    }
-    .star {
-      position: absolute;
-      font-size: 1.4rem;
-      animation: starFloat ease-in-out infinite alternate;
-      opacity: 0.75;
-    }
-    @keyframes starFloat {
-      from { transform: translateY(0) rotate(-10deg) scale(0.9); }
-      to   { transform: translateY(-18px) rotate(10deg) scale(1.1); }
-    }
-
-    /* Bottom emoji row */
-    .emoji-row {
-      margin-top: 22px;
-      font-size: 1.8rem;
-      letter-spacing: 4px;
-      animation: fadeSlide 1s 1.2s ease both;
-      opacity: 0;
-      animation-fill-mode: both;
+    @keyframes confettiFall{
+      0%  { transform:translateY(0) rotate(0deg); opacity:1; }
+      100%{ transform:translateY(110vh) rotate(720deg); opacity:0; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Background blobs -->
-  <div class="blob-wrap">
-    <div class="blob"></div>
-    <div class="blob"></div>
-    <div class="blob"></div>
-    <div class="blob"></div>
-    <div class="blob"></div>
-  </div>
+<div class="cloud"></div>
+<div class="cloud"></div>
+<div class="cloud"></div>
+<div class="sun-el">☀️</div>
+<div class="confetti-wrap" id="confettiWrap"></div>
 
-  <!-- Confetti -->
-  <div class="confetti-wrap" id="confettiWrap"></div>
-
-  <!-- Floating stars -->
-  <div class="stars-wrap" id="starsWrap"></div>
-
-  <!-- Main card -->
-  <div class="card">
-    <span class="sun">☀️</span>
-    <div class="headline">오늘도 화이팅!</div>
-    <div class="sub">우리 팀이 있기에 오늘도 빛납니다 ✨</div>
-    <div class="rainbow-bar"></div>
-    <div class="pills">
-      <span class="pill">💪 할 수 있어</span>
-      <span class="pill">🌈 최고야</span>
-      <span class="pill">⭐ 잘하고 있어</span>
-      <span class="pill">🎯 파이팅</span>
-      <span class="pill">🚀 함께라면 OK</span>
-      <span class="pill">🌸 오늘도 수고</span>
+<!-- Overlay -->
+<div class="overlay" id="overlay">
+  <div class="overlay-card">
+    <span class="overlay-emoji" id="overlayEmoji">🐾</span>
+    <div class="overlay-title" id="overlayTitle">두더지를<br>잡아라!</div>
+    <div class="overlay-sub" id="overlaySub">튀어나오는 두더지를 클릭해봐요 🌿</div>
+    <div class="overlay-score-wrap" id="overlayScoreWrap">
+      <div class="overlay-score-label">최종 점수</div>
+      <div class="overlay-score-num" id="overlayScoreNum">0</div>
     </div>
-    <div class="emoji-row">🌻 🍀 🎊 🌟 🎈</div>
+    <div class="rainbow-bar"></div>
+    <button class="play-btn" id="playBtn" onclick="startGame()">🎮 시작!</button>
+  </div>
+</div>
+
+<!-- Game -->
+<div class="game-wrap">
+  <div class="header">
+    <div class="stat">
+      <div class="stat-label">SCORE</div>
+      <div class="stat-value score" id="scoreDisplay">0</div>
+    </div>
+    <div class="divider"></div>
+    <div class="stat">
+      <div class="stat-label">TIME</div>
+      <div class="stat-value timer" id="timerDisplay">30</div>
+    </div>
+    <div class="divider"></div>
+    <div class="stat">
+      <div class="stat-label">COMBO</div>
+      <div class="stat-value" id="comboDisplay" style="color:var(--c5)">x1</div>
+    </div>
   </div>
 
-  <script>
-    // --- Confetti ---
-    const colors = ['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF9FF3','#FFA552','#fff'];
-    const shapes = ['square','circle','rect'];
-    const wrap = document.getElementById('confettiWrap');
+  <div class="timer-bar-wrap">
+    <div class="timer-bar" id="timerBar"></div>
+  </div>
 
-    for (let i = 0; i < 60; i++) {
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+  const TOTAL_TIME = 30;
+  const HOLES = 9;
+  let score = 0, timeLeft = TOTAL_TIME, combo = 1, comboTimer = null;
+  let gameActive = false, moleTimers = [], countdownInterval = null;
+
+  // Build grid
+  const grid = document.getElementById('grid');
+  for (let i = 0; i < HOLES; i++) {
+    const hole = document.createElement('div');
+    hole.className = 'hole';
+    hole.innerHTML = `
+      <div class="hole-container">
+        <div class="hole-bg"></div>
+        <div class="mole" id="mole${i}">
+          <svg class="mole-svg" viewBox="0 0 58 66" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="29" cy="46" rx="21" ry="18" fill="#8B6558"/>
+            <ellipse cx="29" cy="29" rx="19" ry="17" fill="#A0714F"/>
+            <ellipse cx="29" cy="35" rx="10" ry="6.5" fill="#c49a7e"/>
+            <ellipse cx="29" cy="32" rx="4.5" ry="3" fill="#e8748a"/>
+            <circle cx="21" cy="23" r="4.2" fill="#fff"/>
+            <circle cx="37" cy="23" r="4.2" fill="#fff"/>
+            <circle cx="22" cy="24" r="2.3" fill="#222"/>
+            <circle cx="38" cy="24" r="2.3" fill="#222"/>
+            <circle cx="22.8" cy="23" r="0.9" fill="#fff"/>
+            <circle cx="38.8" cy="23" r="0.9" fill="#fff"/>
+            <ellipse cx="15" cy="29" rx="4.5" ry="2.8" fill="rgba(255,140,140,0.4)"/>
+            <ellipse cx="43" cy="29" rx="4.5" ry="2.8" fill="rgba(255,140,140,0.4)"/>
+            <path d="M23 38 Q29 42 35 38" stroke="#e8748a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+            <ellipse cx="12" cy="15" rx="6.5" ry="4.5" fill="#A0714F" transform="rotate(-22 12 15)"/>
+            <ellipse cx="46" cy="15" rx="6.5" ry="4.5" fill="#A0714F" transform="rotate(22 46 15)"/>
+            <ellipse cx="12" cy="15" rx="3.5" ry="2.5" fill="#c8967a" transform="rotate(-22 12 15)"/>
+            <ellipse cx="46" cy="15" rx="3.5" ry="2.5" fill="#c8967a" transform="rotate(22 46 15)"/>
+          </svg>
+        </div>
+      </div>
+      <div class="hole-grass"></div>
+    `;
+    // click handler on the mole itself
+    hole.querySelector('.mole').addEventListener('click', (e) => whack(e, i));
+    grid.appendChild(hole);
+  }
+
+  function startGame() {
+    score = 0; timeLeft = TOTAL_TIME; combo = 1; gameActive = true;
+    updateUI();
+    document.getElementById('overlay').classList.add('hidden');
+    document.getElementById('overlayScoreWrap').classList.remove('show');
+    document.getElementById('overlayEmoji').textContent = '🐾';
+    document.getElementById('overlayTitle').innerHTML = '두더지를<br>잡아라!';
+    document.getElementById('overlaySub').textContent = '튀어나오는 두더지를 클릭해봐요 🌿';
+    document.getElementById('playBtn').textContent = '🎮 시작!';
+    document.getElementById('confettiWrap').innerHTML = '';
+
+    for (let i = 0; i < HOLES; i++) hideMole(i, true);
+
+    scheduleMoles();
+
+    countdownInterval = setInterval(() => {
+      timeLeft--;
+      updateUI();
+      if (timeLeft <= 0) endGame();
+    }, 1000);
+  }
+
+  function scheduleMoles() {
+    moleTimers.forEach(clearTimeout); moleTimers = [];
+    if (!gameActive) return;
+    const activeMoles = new Set();
+
+    function spawnNext() {
+      if (!gameActive) return;
+      const free = [...Array(HOLES).keys()].filter(i => !activeMoles.has(i));
+      if (!free.length) { moleTimers.push(setTimeout(spawnNext, 300)); return; }
+      const idx = free[Math.floor(Math.random() * free.length)];
+      activeMoles.add(idx);
+      showMole(idx);
+      const elapsed = TOTAL_TIME - timeLeft;
+      const upTime = Math.max(700, 1700 - elapsed * 20);
+      moleTimers.push(setTimeout(() => {
+        hideMole(idx, false);
+        activeMoles.delete(idx);
+      }, upTime));
+      const nextDelay = Math.max(280, 900 - elapsed * 12);
+      moleTimers.push(setTimeout(spawnNext, nextDelay));
+    }
+
+    spawnNext();
+    moleTimers.push(setTimeout(spawnNext, 500));
+  }
+
+  function showMole(idx) {
+    const m = document.getElementById(`mole${idx}`);
+    m.classList.remove('bonked');
+    void m.offsetWidth;
+    m.classList.add('up');
+  }
+
+  function hideMole(idx, instant) {
+    const m = document.getElementById(`mole${idx}`);
+    if (instant) {
+      m.style.transition = 'none';
+      m.classList.remove('up', 'bonked');
+      void m.offsetWidth;
+      m.style.transition = '';
+    } else {
+      m.classList.remove('up', 'bonked');
+    }
+  }
+
+  function whack(e, idx) {
+    if (!gameActive) return;
+    const m = document.getElementById(`mole${idx}`);
+    if (!m.classList.contains('up')) return;
+    e.stopPropagation();
+
+    m.classList.remove('up');
+    m.classList.add('bonked');
+
+    clearTimeout(comboTimer);
+    combo = Math.min(combo + 1, 5);
+    comboTimer = setTimeout(() => { combo = 1; updateUI(); }, 1500);
+
+    const pts = combo;
+    score += pts;
+    updateUI();
+
+    // Score popup
+    const pop = document.createElement('div');
+    pop.className = 'score-pop';
+    pop.textContent = `+${pts}${combo >= 3 ? ' 🔥' : ''}`;
+    pop.style.left = (e.clientX - 20) + 'px';
+    pop.style.top  = (e.clientY - 30) + 'px';
+    document.body.appendChild(pop);
+    setTimeout(() => pop.remove(), 800);
+
+    // Star on hole
+    const hole = m.closest('.hole');
+    const star = document.createElement('div');
+    star.className = 'hit-star';
+    star.textContent = combo >= 4 ? '💥' : combo >= 2 ? '⭐' : '✨';
+    hole.appendChild(star);
+    setTimeout(() => star.remove(), 600);
+  }
+
+  function updateUI() {
+    document.getElementById('scoreDisplay').textContent = score;
+    document.getElementById('timerDisplay').textContent = timeLeft;
+    document.getElementById('comboDisplay').textContent = `x${combo}`;
+    const pct = (timeLeft / TOTAL_TIME) * 100;
+    const bar = document.getElementById('timerBar');
+    bar.style.width = pct + '%';
+    bar.className = 'timer-bar' + (pct < 30 ? ' urgent' : '');
+  }
+
+  function endGame() {
+    gameActive = false;
+    clearInterval(countdownInterval);
+    moleTimers.forEach(clearTimeout);
+    for (let i = 0; i < HOLES; i++) hideMole(i, true);
+    setTimeout(() => {
+      launchConfetti();
+      document.getElementById('overlayEmoji').textContent = '☀️';
+      document.getElementById('overlayTitle').innerHTML = '오늘도<br>화이팅!';
+      document.getElementById('overlaySub').textContent = '수고했어요! 우리 팀 최고예요 🌈';
+      document.getElementById('overlayScoreNum').textContent = score;
+      document.getElementById('overlayScoreWrap').classList.add('show');
+      document.getElementById('playBtn').textContent = '🎮 다시 하기!';
+      document.getElementById('overlay').classList.remove('hidden');
+    }, 400);
+  }
+
+  function launchConfetti() {
+    const wrap = document.getElementById('confettiWrap');
+    wrap.innerHTML = '';
+    const colors = ['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF9FF3','#FFA552','#ffffff'];
+    for (let i = 0; i < 120; i++) {
       const el = document.createElement('div');
       el.className = 'confetti-piece';
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      const shape = shapes[Math.floor(Math.random() * shapes.length)];
-      const size = Math.random() * 10 + 6;
+      const size = Math.random() * 10 + 5;
       el.style.cssText = `
-        left: ${Math.random() * 100}%;
-        width: ${shape === 'rect' ? size * 0.5 : size}px;
-        height: ${size}px;
-        background: ${color};
-        border-radius: ${shape === 'circle' ? '50%' : shape === 'rect' ? '2px' : '2px'};
-        animation-duration: ${Math.random() * 4 + 4}s;
-        animation-delay: ${Math.random() * 6}s;
+        left:${Math.random()*100}%;
+        width:${Math.random()>.5?size*.5:size}px; height:${size}px;
+        background:${colors[Math.floor(Math.random()*colors.length)]};
+        border-radius:${Math.random()>.5?'50%':'2px'};
+        animation-duration:${Math.random()*2+2.5}s;
+        animation-delay:${Math.random()*1.5}s;
       `;
       wrap.appendChild(el);
     }
-
-    // --- Floating stars ---
-    const starsEmoji = ['⭐','🌟','✨','💫','🌸','🌼','🎀','🎁','🍀','🌈','🎵','💖'];
-    const starsWrap = document.getElementById('starsWrap');
-
-    for (let i = 0; i < 18; i++) {
-      const el = document.createElement('div');
-      el.className = 'star';
-      el.textContent = starsEmoji[Math.floor(Math.random() * starsEmoji.length)];
-      el.style.cssText = `
-        left: ${Math.random() * 95}%;
-        top: ${Math.random() * 90}%;
-        font-size: ${Math.random() * 1.2 + 0.9}rem;
-        animation-duration: ${Math.random() * 2 + 2}s;
-        animation-delay: ${Math.random() * 3}s;
-      `;
-      starsWrap.appendChild(el);
-    }
-  </script>
+  }
+</script>
 </body>
 </html>
